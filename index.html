@@ -118,6 +118,30 @@ input:focus{
   margin-right:5px
 }
 
+.modes{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:7px;
+  margin:5px 0 14px
+}
+.mode{
+  border:1px solid var(--line);
+  padding:9px;
+  background:#fafbfb;
+  font-size:11px;
+  cursor:pointer;
+  text-align:center
+}
+.mode input{
+  width:auto;
+  height:auto;
+  margin-right:5px
+}
+.mode:has(input:checked){
+  border-color:var(--accent);
+  background:#eef1f3
+}
+
 .actions{
   display:flex;
   gap:8px;
@@ -651,6 +675,21 @@ button:disabled{
 <div class="formgrid">
 
 <div>
+<label class="required">渲染风格</label>
+<select id="renderStyle">
+<option value="">请选择</option>
+<option selected>写实真人摄影</option>
+<option>二次元动漫插画</option>
+<option>3D 卡通渲染（皮克斯风）</option>
+<option>水彩手绘</option>
+<option>国风工笔重彩</option>
+<option>数字厚涂油画</option>
+<option>赛博朋克霓虹</option>
+<option>吉卜力手绘动画</option>
+</select>
+</div>
+
+<div>
 <label class="required">写实程度</label>
 <select id="real">
 <option value="">请选择</option>
@@ -723,11 +762,20 @@ button:disabled{
 </section>
 
 
-<!-- ④ 展板 -->
+<!-- ④ 输出形式 -->
 <section class="panel">
-<h2>④ 展板模块（默认全选）</h2>
+<h2>④ 输出形式</h2>
 
-<div class="checkrow">
+<label>输出模式</label>
+<div class="modes">
+<label class="mode"><input type="radio" name="outputMode" value="board" checked onchange="onModeChange()"> 完整设定集展板</label>
+<label class="mode"><input type="radio" name="outputMode" value="bust" onchange="onModeChange()"> 单人半身定妆</label>
+<label class="mode"><input type="radio" name="outputMode" value="fullbody" onchange="onModeChange()"> 全身立绘</label>
+<label class="mode"><input type="radio" name="outputMode" value="avatar" onchange="onModeChange()"> 证件照头像</label>
+<label class="mode"><input type="radio" name="outputMode" value="poster" onchange="onModeChange()"> 影视海报肖像</label>
+</div>
+
+<div id="moduleRow" class="checkrow">
 
 <label class="check">
 <input type="checkbox" checked data-m="portrait">
@@ -1034,6 +1082,7 @@ const ids = [
   "hair",
   "clothes",
   "mainColor",
+  "renderStyle",
   "real",
   "light",
   "background",
@@ -1087,44 +1136,119 @@ function selectedModules(){
 }
 
 
+/* =========================================================
+   渲染风格 / 输出模式
+   ========================================================= */
+
+const RENDER_STYLE_TEXT = {
+  "二次元动漫插画": "日系二次元动画插画，精致线稿，赛璐璐上色，色块干净通透，动漫人物比例",
+  "3D 卡通渲染（皮克斯风）": "3D 卡通渲染风格，皮克斯/迪士尼质感，柔和次表面散射皮肤，柔和阴影，圆润造型",
+  "水彩手绘": "水彩手绘风格，粗纹水彩纸质感，透明水色晕染，边缘柔和，留白透气",
+  "国风工笔重彩": "中国工笔重彩画风格，绢本质感，精细线条勾勒，矿物颜料设色，典雅沉静",
+  "数字厚涂油画": "数字厚涂油画风格，明显油画笔触，丰富光影层次，画布肌理",
+  "赛博朋克霓虹": "赛博朋克风格，霓虹灯光反射，高对比冷暖撞色，未来都市氛围",
+  "吉卜力手绘动画": "吉卜力工作室手绘动画风格，温暖手绘色调，柔和水彩背景，治愈质感"
+};
+
+const STYLE_TEXTURE = {
+  "写实真人摄影": "真实自然的皮肤、毛发和织物，不塑料皮肤，不过度磨皮",
+  "二次元动漫插画": "线条干净流畅，色块通透，眼睛精致有高光，避免照片写实质感",
+  "3D 卡通渲染（皮克斯风）": "材质细腻柔和，造型圆润可爱，避免恐怖谷",
+  "水彩手绘": "色彩透明叠加，边缘晕染自然，避免厚涂堆砌",
+  "国风工笔重彩": "线条工整，设色典雅，避免现代元素与时代错置",
+  "数字厚涂油画": "笔触明确，光影立体，画布质感真实",
+  "赛博朋克霓虹": "霓虹反射自然，高光不过曝，暗部有细节",
+  "吉卜力手绘动画": "手绘线条自然松动，色彩温暖，避免过度写实"
+};
+
+function styleOpening(){
+  const s = val("renderStyle");
+  if(!s || s === "写实真人摄影") return val("real");
+  return RENDER_STYLE_TEXT[s] || val("real");
+}
+
+function styleTexture(){
+  return STYLE_TEXTURE[val("renderStyle")] || STYLE_TEXTURE["写实真人摄影"];
+}
+
+function selectedOutputMode(){
+  const r = document.querySelector('input[name="outputMode"]:checked');
+  return r ? r.value : "board";
+}
+
+function onModeChange(){
+  const mode = selectedOutputMode();
+  const isBoard = (mode === "board");
+
+  document.getElementById("moduleRow").style.display =
+    isBoard ? "" : "none";
+
+  const preview = document.querySelector(".preview");
+  if(preview) preview.style.display = isBoard ? "" : "none";
+
+  const ratioMap = {
+    board: "16:9",
+    bust: "3:4",
+    fullbody: "9:16",
+    avatar: "1:1",
+    poster: "2:3"
+  };
+  const ratioSel = document.getElementById("imageRatio");
+  if(ratioSel && ratioMap[mode]) ratioSel.value = ratioMap[mode];
+
+  generate();
+}
+
+
 /*
- * 注意：
- * 这里保持你最早版本的提示词内容和结构。
+ * 提示词生成。
  * AI 生成时会直接使用这里生成的 p。
- * 不再对 p 做二次包装或重写。
  */
 function generate(){
 
   if(!requiredCheck()) return;
 
-  const modules = selectedModules();
+  const mode = selectedOutputMode();
+  const opening = styleOpening();
+  const texture = styleTexture();
 
-  const p = `制作一张「古装人物完整定妆照／角色设定集」风格的模块化角色展示展板。
+  const personCore =
+    `${val("age")}、${val("gender")}，${val("world")}世界观，身份为${val("identity")}，人物定位为${val("type")}；整体气质${val("temper")}。\n外貌：${val("faceShape")}，${val("skin")}，${val("eyes")}，发型为${val("hair")}。`;
+
+  const costume =
+    `${val("clothes")}，主色为${val("mainColor")}；面料采用${val("fabric")}；配饰为${val("accessory")}；鞋履为${val("shoes")}；妆容为${val("makeup")}。`;
+
+  let p = "";
+
+  if(mode === "board"){
+
+    const modules = selectedModules();
+
+    p = `制作一张「${opening}」风格的模块化角色展示展板。
 
 【人物核心】
-${val("age")}、${val("gender")}，${val("world")}世界观，身份为${val("identity")}，人物定位为${val("type")}；整体气质${val("temper")}。
-外貌：${val("faceShape")}，${val("skin")}，${val("eyes")}，发型为${val("hair")}。
+${personCore}
 
 【服装造型】
-${val("clothes")}，主色为${val("mainColor")}；面料采用${val("fabric")}；配饰为${val("accessory")}；鞋履为${val("shoes")}；妆容为${val("makeup")}。
+${costume}
 
 【整体版式】
 浅灰白色简约画册版式，白底，细浅灰色边框，模块化分栏排版，留白充足，清晰细线分隔，统一简约中文小标题，像高端影视角色定妆照与专业美术设定集结合的角色档案页。所有模块保持同一人物、同一套服装、同一套发型、同一张脸和统一色彩体系。
 
 ${modules.includes("portrait") ? `【左上｜人物胸像特写】
-人物胸像定妆照，重点表现${val("temper")}、面部特征、发型与服装领口；${val("real")}，${val("light")}，${val("background")}，${val("lens")}，${val("detail")}。` : ""}
+人物胸像定妆照，重点表现${val("temper")}、面部特征、发型与服装领口；${val("light")}，${val("background")}，${val("lens")}，${val("detail")}。` : ""}
 
 ${modules.includes("views") ? `【右上｜完整三视图】
-同一人物、同一张脸、同一造型，严格保持五官、年龄、发型和服装一致；正面站姿、侧面站姿、背面站姿三连全身视图，完整展示服装结构、配饰与鞋履；纯净背景，人物比例自然，写实真人定妆照质感。` : ""}
+同一人物、同一张脸、同一造型，严格保持五官、年龄、发型和服装一致；正面站姿、侧面站姿、背面站姿三连全身视图，完整展示服装结构、配饰与鞋履；纯净背景，人物比例自然。` : ""}
 
 ${modules.includes("expressions") ? `【中间｜五宫格面部表情】
-同一人物五宫格面部特写，五官、发型、年龄、妆容完全一致，只改变神态：亲和微笑、专注认真、沉着冷静、担忧焦急、疲惫倦怠；每格构图统一，面部比例一致，真实皮肤纹理与毛发。` : ""}
+同一人物五宫格面部特写，五官、发型、年龄、妆容完全一致，只改变神态：亲和微笑、专注认真、沉着冷静、担忧焦急、疲惫倦怠；每格构图统一，面部比例一致。` : ""}
 
 ${modules.includes("costume") ? `【左下｜服装造型细节】
 拼接式局部微距特写：领口、袖口、衣襟、${val("fabric")}、${val("accessory")}、腰部结构、${val("shoes")}；强调针脚、织物纹理、自然褶皱、材质差异与服装结构。` : ""}
 
 ${modules.includes("props") ? `【右下｜人物道具静物】
-根据${val("identity")}身份设计道具并平铺俯拍，例如身份凭证、书册、折扇、玉佩、印章、文房用品、随身工具等；白色或浅灰背景，排列整洁，高级静物摄影与影视道具设定集质感。` : ""}
+根据${val("identity")}身份设计道具并平铺俯拍，例如身份凭证、书册、折扇、玉佩、印章、文房用品、随身工具等；白色或浅灰背景，排列整洁。` : ""}
 
 ${modules.includes("palette") ? `【底部｜色彩与材质】
 制作${val("palette")}配色色卡、服装面料小样、纹理微距、眉眼与妆容特写；所有色彩与材质服务于人物身份和世界观。` : ""}
@@ -1136,7 +1260,48 @@ ${modules.includes("scene") ? `【底部｜场景小插图】
 加入一幅与${val("world")}和${val("identity")}匹配的小型环境插图，作为人物生活背景；不抢主体，不增加无关人物，保持同一冷暖色调。` : ""}
 
 【统一视觉要求】
-${val("real")}，${val("light")}，${val("background")}，${val("palette")}，${val("lens")}，${val("detail")}；真实自然的皮肤、毛发和织物，不塑料皮肤，不过度磨皮；避免现代元素与时代错置；不同模块中的人物脸部必须保持一致；不要多余人物、不要乱码、不要水印、不要变形肢体、不要重复道具、不要杂乱背景。`;
+${val("light")}，${val("background")}，${val("palette")}，${val("lens")}，${val("detail")}；${texture}；避免时代错置；不同模块中的人物脸部必须保持一致；不要多余人物、不要乱码、不要水印、不要变形肢体、不要重复道具、不要杂乱背景。`;
+
+  } else {
+
+    const shotMap = {
+      bust: {
+        title: "单人半身定妆照",
+        shot: "单人半身构图，胸部至腰部特写，人物居中略侧，三分之二视角，重点表现面部表情、发型与领口服装细节。"
+      },
+      fullbody: {
+        title: "全身立绘",
+        shot: "单人全身立绘，完整从头到脚站姿，人物比例修长自然，双手自然垂放或手持身份道具，纯白或浅灰简洁背景便于抠图，完整展示服装结构、配饰与鞋履。"
+      },
+      avatar: {
+        title: "证件照头像",
+        shot: "证件照式头像，方形构图，正面平视，肩部以上，头部居中，表情自然中性，纯白或浅灰无缝背景，均匀柔和证件照光，适合做社交头像。"
+      },
+      poster: {
+        title: "电影海报式角色肖像",
+        shot: "电影海报式肖像，半身或七分身，略仰拍，戏剧性侧光，浅景深背景虚化，人物气质突出，画面单侧留白适合后期加标题。"
+      }
+    };
+
+    const s = shotMap[mode] || shotMap.bust;
+
+    p = `制作一张「${opening}」风格的角色${s.title}。
+
+【人物核心】
+${personCore}
+
+【服装造型】
+${costume}
+
+【构图】
+${s.shot}
+
+【摄影与色彩】
+${val("light")}，${val("background")}，${val("palette")}，${val("lens")}，${val("detail")}。
+
+【统一视觉要求】
+${texture}；人物五官端正，不要乱码、不要水印、不要变形肢体、不要多余人物、不要时代错置。`;
+  }
 
   document.getElementById("prompt").textContent = p;
 }
@@ -1264,6 +1429,17 @@ function randomize(){
       "墨绿 / 青灰",
       "暖金古典色",
       "低饱和莫兰迪"
+    ],
+
+    renderStyle:[
+      "写实真人摄影",
+      "二次元动漫插画",
+      "3D 卡通渲染（皮克斯风）",
+      "水彩手绘",
+      "国风工笔重彩",
+      "数字厚涂油画",
+      "赛博朋克霓虹",
+      "吉卜力手绘动画"
     ],
 
     real:[
