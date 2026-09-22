@@ -493,6 +493,8 @@ button:disabled{
   </div>
 
   <div class="status">
+    <a href="javascript:void(0)" onclick="showFeedbackEmail()" style="color:var(--accent);font-weight:600;text-decoration:none">✉ 意见和反馈</a>
+    <span id="feedbackEmail" style="display:none;font-size:11px;margin-left:8px;color:var(--text);cursor:pointer" title="点击复制" onclick="copyFeedbackEmail()">📮 jianbox2026@163.com</span><br>
     影视定妆照 / 三视图 / 五宫格表情 / 服装细节 / 道具 / 色卡 / 场景<br>
     模块化角色设定集工作流
   </div>
@@ -501,6 +503,43 @@ button:disabled{
 <div class="layout">
 
 <main>
+
+<!-- 短剧人设一键套入 -->
+<section class="panel" style="margin-bottom:14px">
+<h2>⌁ 短剧人设一键套入</h2>
+
+<div class="formgrid">
+<div>
+<label>短剧类型</label>
+<select id="dramaType">
+<option value="">请选择类型</option>
+<option>霸总</option>
+<option>战神</option>
+<option>重生复仇</option>
+<option>穿越</option>
+<option>马甲文</option>
+<option>甜宠</option>
+<option>虐恋</option>
+<option>赘婿</option>
+<option>萌宝</option>
+<option>系统流</option>
+</select>
+</div>
+
+<div>
+<label>角色定位</label>
+<select id="dramaRole">
+<option value="protagonist">主角</option>
+<option value="supporting">配角</option>
+<option value="villain">反派</option>
+</select>
+</div>
+</div>
+
+<button onclick="applyDramaTemplate()" style="margin-top:12px;width:100%">一键套入并生成</button>
+<div class="hint">选类型+定位后点按钮，下方所有下拉会自动填成对应的短剧常见配置，再手动微调即可。</div>
+</section>
+
 
 <!-- ① 核心人设 -->
 <section class="panel">
@@ -968,7 +1007,7 @@ button:disabled{
 <section class="output">
 
 <div class="outputhead">
-<h2>生成结果</h2>
+<h2>角色定妆照提示词</h2>
 <button class="alt" onclick="copyPrompt()">复制</button>
 </div>
 
@@ -979,28 +1018,17 @@ button:disabled{
 </section>
 
 
-<!-- 历史记录 -->
-<section class="history-panel">
-
-<div class="outputhead">
-<h2>历史记录</h2>
-<button class="alt" onclick="clearHistory()">清空历史</button>
-</div>
-
-<div id="historyList" class="history-list">
-<div class="history-empty">还没有历史记录。点「生成完整提示词」会自动保存，最多保留 50 条。</div>
-</div>
-
-</section>
-
-
 <!-- 新增：AI 图片生成 -->
 <section class="ai-panel">
 
 <div class="ai-head">
 <h2>AI 生成图片</h2>
-<div class="ai-status" id="aiStatus">
-Agnes Image 2.5 Flash
+<div style="text-align:right">
+  <div class="ai-status" id="aiStatus">Agnes Image 2.5 Flash</div>
+  <div style="font-size:10px;margin-top:3px;line-height:1.6">
+    没有 API Key？<a href="https://platform.agnes-ai.com/settings/apiKeys" target="_blank" rel="noopener" style="color:var(--accent);font-weight:600">点这里获取测试</a><br>
+    也可点上方「复制」，把提示词贴到其他专业生图 AI
+  </div>
 </div>
 </div>
 
@@ -1159,6 +1187,21 @@ AI 生成图片
 
 </section>
 
+
+<!-- 历史记录 -->
+<section class="history-panel">
+
+<div class="outputhead">
+<h2>历史记录</h2>
+<button class="alt" onclick="clearHistory()">清空历史</button>
+</div>
+
+<div id="historyList" class="history-list">
+<div class="history-empty">还没有历史记录。点「生成完整提示词」会自动保存，最多保留 50 条。</div>
+</div>
+
+</section>
+
 </aside>
 
 </div>
@@ -1235,6 +1278,308 @@ function selectedModules(){
   return [
     ...document.querySelectorAll("[data-m]:checked")
   ].map(x => x.dataset.m);
+}
+
+
+/* =========================================================
+   短剧人设模板
+   ========================================================= */
+
+const DRAMA_TEMPLATES = {
+
+  "霸总": {
+    protagonist: {
+      gender:"男性", age:"青年（26–30岁）", world:"现代都市", identity:"商人",
+      temper:"冷峻克制", type:"电影角色档案", faceShape:"轮廓立体", skin:"暖白皮",
+      eyes:"深邃锐利", hair:"短发", clothes:"现代西装", mainColor:"黑 / 银灰",
+      fabric:"现代精纺面料", accessory:"金表、袖扣", shoes:"现代皮鞋",
+      makeup:"冷感时尚妆", real:"电影级写实真人摄影", light:"电影侧光",
+      background:"人物身份相关室内场景", palette:"冷蓝灰电影色"
+    },
+    supporting: {
+      gender:"女性", age:"青年（19–25岁）", world:"现代都市", identity:"普通百姓",
+      temper:"温柔知性", type:"时尚杂志人物", faceShape:"小V脸", skin:"自然冷白皮",
+      eyes:"温柔圆眼", hair:"盘发", clothes:"现代西装", mainColor:"米白 / 棕",
+      fabric:"现代精纺面料", accessory:"耳饰、项链", shoes:"现代皮鞋",
+      makeup:"淡妆、自然眉、低饱和唇色", real:"商业棚拍摄影", light:"自然窗光",
+      background:"人物身份相关室内场景", palette:"冷调莫兰迪低饱和"
+    },
+    villain: {
+      gender:"男性", age:"成熟（41–55岁）", world:"现代都市", identity:"普通百姓",
+      temper:"神秘危险", type:"电影角色档案", faceShape:"偏长脸", skin:"暖白皮",
+      eyes:"深邃锐利", hair:"短发", clothes:"现代西装", mainColor:"黑 / 深红",
+      fabric:"现代精纺面料", accessory:"金表、袖扣", shoes:"现代皮鞋",
+      makeup:"冷感时尚妆", real:"电影级写实真人摄影", light:"低调戏剧光",
+      background:"人物身份相关室内场景", palette:"黑红权谋色"
+    }
+  },
+
+  "战神": {
+    protagonist: {
+      gender:"男性", age:"青年（26–30岁）", world:"现代都市", identity:"将军 / 武将",
+      temper:"英气利落", type:"电影角色档案", faceShape:"轮廓立体", skin:"健康自然肤色",
+      eyes:"英气剑眉", hair:"短发", clothes:"现代西装", mainColor:"黑 / 银灰",
+      fabric:"现代精纺面料", accessory:"耳饰、项链、戒指", shoes:"现代皮鞋",
+      makeup:"几乎素颜、真实皮肤纹理", real:"电影级写实真人摄影", light:"电影侧光",
+      background:"人物身份相关室内场景", palette:"冷蓝灰电影色"
+    },
+    supporting: {
+      gender:"女性", age:"青年（19–25岁）", world:"现代都市", identity:"医者",
+      temper:"英气利落", type:"写实角色设定集", faceShape:"鹅蛋脸", skin:"健康自然肤色",
+      eyes:"英气剑眉", hair:"高马尾", clothes:"现代医生白大褂", mainColor:"米白 / 棕",
+      fabric:"现代精纺面料", accessory:"简洁无明显配饰", shoes:"现代运动鞋",
+      makeup:"淡妆、自然眉、低饱和唇色", real:"商业棚拍摄影", light:"冷色棚拍柔光",
+      background:"纯白无缝背景", palette:"冷调莫兰迪低饱和"
+    },
+    villain: {
+      gender:"男性", age:"中年（56岁以上）", world:"近未来", identity:"刺客",
+      temper:"冷峻克制", type:"电影角色档案", faceShape:"轮廓立体", skin:"小麦肤色",
+      eyes:"深邃锐利", hair:"短发", clothes:"现代西装", mainColor:"黑 / 银灰",
+      fabric:"皮革、金属、硬挺结构", accessory:"耳饰、项链、戒指", shoes:"现代皮鞋",
+      makeup:"几乎素颜、真实皮肤纹理", real:"电影级写实真人摄影", light:"低调戏剧光",
+      background:"浅灰渐变", palette:"黑红权谋色"
+    }
+  },
+
+  "重生复仇": {
+    protagonist: {
+      gender:"女性", age:"青年（26–30岁）", world:"现代都市", identity:"商人",
+      temper:"清冷温润", type:"电影角色档案", faceShape:"小V脸", skin:"自然冷白皮",
+      eyes:"凤眼", hair:"盘发", clothes:"现代西装", mainColor:"黑 / 深红",
+      fabric:"现代精纺面料", accessory:"耳饰、项链、戒指", shoes:"现代皮鞋",
+      makeup:"冷感时尚妆", real:"电影级写实真人摄影", light:"电影侧光",
+      background:"人物身份相关室内场景", palette:"黑红权谋色"
+    },
+    supporting: {
+      gender:"男性", age:"青年（26–30岁）", world:"现代都市", identity:"医者",
+      temper:"温柔知性", type:"写实角色设定集", faceShape:"轮廓立体", skin:"暖白皮",
+      eyes:"温柔圆眼", hair:"短发", clothes:"现代医生白大褂", mainColor:"米白 / 棕",
+      fabric:"现代精纺面料", accessory:"简洁无明显配饰", shoes:"现代皮鞋",
+      makeup:"几乎素颜、真实皮肤纹理", real:"电影级写实真人摄影", light:"自然窗光",
+      background:"人物身份相关室内场景", palette:"冷调莫兰迪低饱和"
+    },
+    villain: {
+      gender:"女性", age:"成年（31–40岁）", world:"现代都市", identity:"贵族小姐",
+      temper:"明艳张扬", type:"时尚杂志人物", faceShape:"鹅蛋脸", skin:"暖白皮",
+      eyes:"桃花眼", hair:"自然披发", clothes:"华贵宫廷礼服", mainColor:"金 / 深红",
+      fabric:"锦缎、暗纹、挺括垂坠", accessory:"金冠、玉佩、华贵腰饰", shoes:"现代皮鞋",
+      makeup:"华贵宫廷妆", real:"商业棚拍摄影", light:"明亮商业摄影光",
+      background:"人物身份相关室内场景", palette:"金 / 深红"
+    }
+  },
+
+  "穿越": {
+    protagonist: {
+      gender:"男性", age:"青年（19–25岁）", world:"东方古典架空", identity:"江湖侠客",
+      temper:"慵懒随性", type:"古装美术设定", faceShape:"少年感窄脸", skin:"古典瓷白肤色",
+      eyes:"清俊细长眉眼", hair:"长发半束", clothes:"月白交领长袍 + 墨青外衫", mainColor:"月白 / 米白 / 墨青",
+      fabric:"细密丝绸、轻薄织纹、自然垂坠", accessory:"折扇、香囊、玉簪", shoes:"古典软底鞋",
+      makeup:"几乎素颜、真实皮肤纹理", real:"高端影视定妆照", light:"自然窗光",
+      background:"米白古典摄影棚", palette:"米白 + 月白 + 墨青"
+    },
+    supporting: {
+      gender:"女性", age:"青年（19–25岁）", world:"东方古典架空", identity:"贵族小姐",
+      temper:"温柔知性", type:"古装美术设定", faceShape:"鹅蛋脸", skin:"古典瓷白肤色",
+      eyes:"温柔圆眼", hair:"盘发", clothes:"白色古装长袍", mainColor:"米白 / 棕",
+      fabric:"薄纱、半透明层叠", accessory:"耳饰、项链、戒指", shoes:"古典软底鞋",
+      makeup:"精致古装妆、清透底妆", real:"高端影视定妆照", light:"柔和室内柔光 + 轻微轮廓光",
+      background:"米白古典摄影棚", palette:"暖金古典色"
+    },
+    villain: {
+      gender:"男性", age:"成熟（41–55岁）", world:"宫廷权谋", identity:"皇族 / 王族",
+      temper:"神秘危险", type:"电影角色档案", faceShape:"偏长脸", skin:"暖白皮",
+      eyes:"深邃锐利", hair:"古典发冠束发", clothes:"华贵宫廷礼服", mainColor:"金 / 深红",
+      fabric:"锦缎、暗纹、挺括垂坠", accessory:"金冠、玉佩、华贵腰饰", shoes:"黑色布靴",
+      makeup:"英气眉眼、低饱和妆容", real:"电影级写实真人摄影", light:"低调戏剧光",
+      background:"米白古典摄影棚", palette:"黑红权谋色"
+    }
+  },
+
+  "马甲文": {
+    protagonist: {
+      gender:"男性", age:"青年（19–25岁）", world:"现代都市", identity:"学生",
+      temper:"阳光开朗", type:"写实角色设定集", faceShape:"少年感窄脸", skin:"健康自然肤色",
+      eyes:"自然少年感", hair:"短发", clothes:"现代西装", mainColor:"米白 / 棕",
+      fabric:"现代精纺面料", accessory:"简洁无明显配饰", shoes:"现代运动鞋",
+      makeup:"几乎素颜、真实皮肤纹理", real:"商业棚拍摄影", light:"自然窗光",
+      background:"纯白无缝背景", palette:"冷调莫兰迪低饱和"
+    },
+    supporting: {
+      gender:"女性", age:"青年（19–25岁）", world:"现代都市", identity:"学生",
+      temper:"温柔知性", type:"时尚杂志人物", faceShape:"小V脸", skin:"自然冷白皮",
+      eyes:"温柔圆眼", hair:"自然披发", clothes:"现代西装", mainColor:"米白 / 棕",
+      fabric:"现代精纺面料", accessory:"耳饰、项链、戒指", shoes:"现代运动鞋",
+      makeup:"淡妆、自然眉、低饱和唇色", real:"商业棚拍摄影", light:"明亮商业摄影光",
+      background:"浅灰白纯色摄影棚", palette:"冷调莫兰迪低饱和"
+    },
+    villain: {
+      gender:"男性", age:"成年（31–40岁）", world:"现代都市", identity:"侦探",
+      temper:"冷峻克制", type:"电影角色档案", faceShape:"轮廓立体", skin:"暖白皮",
+      eyes:"深邃锐利", hair:"短发", clothes:"现代西装", mainColor:"黑 / 银灰",
+      fabric:"现代精纺面料", accessory:"金表、袖扣", shoes:"现代皮鞋",
+      makeup:"冷感时尚妆", real:"电影级写实真人摄影", light:"低调戏剧光",
+      background:"人物身份相关室内场景", palette:"冷蓝灰电影色"
+    }
+  },
+
+  "甜宠": {
+    protagonist: {
+      gender:"女性", age:"青年（19–25岁）", world:"现代都市", identity:"普通百姓",
+      temper:"温柔知性", type:"时尚杂志人物", faceShape:"鹅蛋脸", skin:"自然冷白皮",
+      eyes:"温柔圆眼", hair:"自然披发", clothes:"现代西装", mainColor:"米白 / 棕",
+      fabric:"现代精纺面料", accessory:"耳饰、项链、戒指", shoes:"现代皮鞋",
+      makeup:"淡妆、自然眉、低饱和唇色", real:"商业棚拍摄影", light:"明亮商业摄影光",
+      background:"浅灰白纯色摄影棚", palette:"冷调莫兰迪低饱和"
+    },
+    supporting: {
+      gender:"男性", age:"青年（26–30岁）", world:"现代都市", identity:"医者",
+      temper:"温柔知性", type:"写实角色设定集", faceShape:"轮廓立体", skin:"暖白皮",
+      eyes:"温柔圆眼", hair:"短发", clothes:"现代医生白大褂", mainColor:"米白 / 棕",
+      fabric:"现代精纺面料", accessory:"简洁无明显配饰", shoes:"现代皮鞋",
+      makeup:"几乎素颜、真实皮肤纹理", real:"商业棚拍摄影", light:"柔和室内柔光 + 轻微轮廓光",
+      background:"人物身份相关室内场景", palette:"冷调莫兰迪低饱和"
+    },
+    villain: {
+      gender:"女性", age:"青年（19–25岁）", world:"现代都市", identity:"贵族小姐",
+      temper:"明艳张扬", type:"时尚杂志人物", faceShape:"小V脸", skin:"暖白皮",
+      eyes:"桃花眼", hair:"自然披发", clothes:"华贵宫廷礼服", mainColor:"金 / 深红",
+      fabric:"锦缎、暗纹、挺括垂坠", accessory:"金冠、玉佩、华贵腰饰", shoes:"现代皮鞋",
+      makeup:"冷感时尚妆", real:"商业棚拍摄影", light:"明亮商业摄影光",
+      background:"浅灰白纯色摄影棚", palette:"金 / 深红"
+    }
+  },
+
+  "虐恋": {
+    protagonist: {
+      gender:"女性", age:"青年（26–30岁）", world:"民国", identity:"普通百姓",
+      temper:"清冷温润", type:"电影角色档案", faceShape:"鹅蛋脸", skin:"自然冷白皮",
+      eyes:"凤眼", hair:"盘发", clothes:"现代西装", mainColor:"米白 / 棕",
+      fabric:"现代精纺面料", accessory:"耳饰、项链、戒指", shoes:"现代皮鞋",
+      makeup:"淡妆、自然眉、低饱和唇色", real:"电影级写实真人摄影", light:"自然窗光",
+      background:"人物身份相关室内场景", palette:"冷蓝灰电影色"
+    },
+    supporting: {
+      gender:"男性", age:"青年（26–30岁）", world:"民国", identity:"商人",
+      temper:"成熟沉稳", type:"电影角色档案", faceShape:"轮廓立体", skin:"暖白皮",
+      eyes:"深邃锐利", hair:"短发", clothes:"现代西装", mainColor:"黑 / 银灰",
+      fabric:"现代精纺面料", accessory:"金表、袖扣", shoes:"现代皮鞋",
+      makeup:"几乎素颜、真实皮肤纹理", real:"电影级写实真人摄影", light:"电影侧光",
+      background:"人物身份相关室内场景", palette:"冷蓝灰电影色"
+    },
+    villain: {
+      gender:"女性", age:"成熟（41–55岁）", world:"现代都市", identity:"贵族小姐",
+      temper:"高贵疏离", type:"电影角色档案", faceShape:"偏长脸", skin:"暖白皮",
+      eyes:"凤眼", hair:"盘发", clothes:"华贵宫廷礼服", mainColor:"金 / 深红",
+      fabric:"锦缎、暗纹、挺括垂坠", accessory:"金冠、玉佩、华贵腰饰", shoes:"现代皮鞋",
+      makeup:"华贵宫廷妆", real:"高端影视定妆照", light:"低调戏剧光",
+      background:"米白古典摄影棚", palette:"黑红权谋色"
+    }
+  },
+
+  "赘婿": {
+    protagonist: {
+      gender:"男性", age:"青年（26–30岁）", world:"现代都市", identity:"普通百姓",
+      temper:"慵懒随性", type:"电影角色档案", faceShape:"轮廓立体", skin:"健康自然肤色",
+      eyes:"深邃锐利", hair:"短发", clothes:"现代西装", mainColor:"米白 / 棕",
+      fabric:"现代精纺面料", accessory:"简洁无明显配饰", shoes:"现代皮鞋",
+      makeup:"几乎素颜、真实皮肤纹理", real:"电影级写实真人摄影", light:"电影侧光",
+      background:"人物身份相关室内场景", palette:"冷蓝灰电影色"
+    },
+    supporting: {
+      gender:"女性", age:"青年（19–25岁）", world:"现代都市", identity:"贵族小姐",
+      temper:"明艳张扬", type:"时尚杂志人物", faceShape:"小V脸", skin:"自然冷白皮",
+      eyes:"桃花眼", hair:"自然披发", clothes:"现代西装", mainColor:"米白 / 棕",
+      fabric:"现代精纺面料", accessory:"耳饰、项链、戒指", shoes:"现代皮鞋",
+      makeup:"淡妆、自然眉、低饱和唇色", real:"商业棚拍摄影", light:"明亮商业摄影光",
+      background:"浅灰白纯色摄影棚", palette:"冷调莫兰迪低饱和"
+    },
+    villain: {
+      gender:"女性", age:"成熟（41–55岁）", world:"现代都市", identity:"普通百姓",
+      temper:"高贵疏离", type:"写实角色设定集", faceShape:"方圆脸", skin:"暖白皮",
+      eyes:"深邃锐利", hair:"盘发", clothes:"华贵宫廷礼服", mainColor:"金 / 深红",
+      fabric:"现代精纺面料", accessory:"金冠、玉佩、华贵腰饰", shoes:"现代皮鞋",
+      makeup:"华贵宫廷妆", real:"高端影视定妆照", light:"低调戏剧光",
+      background:"人物身份相关室内场景", palette:"黑红权谋色"
+    }
+  },
+
+  "萌宝": {
+    protagonist: {
+      gender:"男性", age:"少年（16–18岁）", world:"现代都市", identity:"学生",
+      temper:"少年感", type:"写实角色设定集", faceShape:"少年感窄脸", skin:"健康自然肤色",
+      eyes:"自然少年感", hair:"短发", clothes:"现代西装", mainColor:"米白 / 棕",
+      fabric:"现代精纺面料", accessory:"简洁无明显配饰", shoes:"现代运动鞋",
+      makeup:"几乎素颜、真实皮肤纹理", real:"商业棚拍摄影", light:"明亮商业摄影光",
+      background:"纯白无缝背景", palette:"冷调莫兰迪低饱和"
+    },
+    supporting: {
+      gender:"男性", age:"青年（26–30岁）", world:"现代都市", identity:"商人",
+      temper:"冷峻克制", type:"电影角色档案", faceShape:"轮廓立体", skin:"暖白皮",
+      eyes:"深邃锐利", hair:"短发", clothes:"现代西装", mainColor:"黑 / 银灰",
+      fabric:"现代精纺面料", accessory:"金表、袖扣", shoes:"现代皮鞋",
+      makeup:"冷感时尚妆", real:"电影级写实真人摄影", light:"电影侧光",
+      background:"人物身份相关室内场景", palette:"冷蓝灰电影色"
+    },
+    villain: {
+      gender:"女性", age:"成熟（41–55岁）", world:"现代都市", identity:"普通百姓",
+      temper:"高贵疏离", type:"写实角色设定集", faceShape:"方圆脸", skin:"暖白皮",
+      eyes:"深邃锐利", hair:"盘发", clothes:"华贵宫廷礼服", mainColor:"金 / 深红",
+      fabric:"现代精纺面料", accessory:"金冠、玉佩、华贵腰饰", shoes:"现代皮鞋",
+      makeup:"华贵宫廷妆", real:"高端影视定妆照", light:"低调戏剧光",
+      background:"人物身份相关室内场景", palette:"黑红权谋色"
+    }
+  },
+
+  "系统流": {
+    protagonist: {
+      gender:"男性", age:"少年（16–18岁）", world:"原创幻想世界", identity:"学生",
+      temper:"阳光开朗", type:"写实概念原画", faceShape:"少年感窄脸", skin:"健康自然肤色",
+      eyes:"自然少年感", hair:"短发", clothes:"现代西装", mainColor:"低饱和莫兰迪",
+      fabric:"现代精纺面料", accessory:"简洁无明显配饰", shoes:"现代运动鞋",
+      makeup:"几乎素颜、真实皮肤纹理", real:"写实概念原画", light:"柔和室内柔光 + 轻微轮廓光",
+      background:"浅灰白纯色摄影棚", palette:"低饱和莫兰迪"
+    },
+    supporting: {
+      gender:"女性", age:"青年（19–25岁）", world:"原创幻想世界", identity:"法师",
+      temper:"温柔知性", type:"半写实角色设计", faceShape:"鹅蛋脸", skin:"自然冷白皮",
+      eyes:"温柔圆眼", hair:"自然披发", clothes:"仙侠飘逸长衫", mainColor:"青蓝 / 灰蓝",
+      fabric:"薄纱、半透明层叠", accessory:"耳饰、项链、戒指", shoes:"现代运动鞋",
+      makeup:"精致古装妆、清透底妆", real:"半写实角色设计", light:"柔和室内柔光 + 轻微轮廓光",
+      background:"浅灰白纯色摄影棚", palette:"青绿东方色"
+    },
+    villain: {
+      gender:"男性", age:"成年（31–40岁）", world:"原创幻想世界", identity:"刺客",
+      temper:"神秘危险", type:"写实概念原画", faceShape:"轮廓立体", skin:"小麦肤色",
+      eyes:"深邃锐利", hair:"短发", clothes:"轻甲武将服", mainColor:"黑 / 银灰",
+      fabric:"皮革、金属、硬挺结构", accessory:"剑、护腕、腰牌", shoes:"黑色长靴",
+      makeup:"英气眉眼、低饱和妆容", real:"写实概念原画", light:"低调戏剧光",
+      background:"浅灰渐变", palette:"黑红权谋色"
+    }
+  }
+};
+
+function applyDramaTemplate(){
+  const t = val("dramaType");
+  const r = val("dramaRole");
+
+  if(!t){
+    alert("请先选择短剧类型");
+    return;
+  }
+
+  const tpl = DRAMA_TEMPLATES[t] && DRAMA_TEMPLATES[t][r];
+
+  if(!tpl){
+    alert("该类型 / 定位组合暂无模板，可手动选择");
+    return;
+  }
+
+  Object.entries(tpl).forEach(([id, v]) => {
+    const el = document.getElementById(id);
+    if(el) el.value = v;
+  });
+
+  generate(true);
 }
 
 
@@ -1715,6 +2060,22 @@ function randomize(){
 
 function resetForm(){
   location.reload();
+}
+
+
+/* =========================================================
+   意见反馈邮箱
+   ========================================================= */
+
+function showFeedbackEmail(){
+  document.getElementById("feedbackEmail").style.display = "inline";
+}
+
+function copyFeedbackEmail(){
+  const email = "jianbox2026@163.com";
+  navigator.clipboard.writeText(email)
+    .then(() => alert("邮箱已复制：" + email))
+    .catch(() => alert("邮箱：" + email));
 }
 
 
