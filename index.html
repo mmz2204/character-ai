@@ -1,0 +1,1831 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>角色定妆照提示词生成器 Pro</title>
+
+<style>
+:root{
+  --bg:#f3f5f6;
+  --card:#fff;
+  --line:#d8dde1;
+  --text:#26323a;
+  --muted:#7a858d;
+  --accent:#5f6d77;
+  --danger:#b65c5c;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Noto Sans SC","Microsoft YaHei",sans-serif
+}
+.wrap{max-width:1420px;margin:24px auto;padding:0 16px}
+.top{
+  background:#fff;
+  border:1px solid var(--line);
+  padding:22px 26px;
+  display:flex;
+  justify-content:space-between;
+  gap:20px
+}
+h1{font-size:25px;margin:0 0 6px;letter-spacing:.5px}
+.sub{font-size:12px;color:var(--muted)}
+.status{font-size:12px;color:var(--muted);line-height:1.8;text-align:right}
+
+.layout{
+  display:grid;
+  grid-template-columns:470px 1fr;
+  gap:14px;
+  margin-top:14px
+}
+.panel{
+  background:var(--card);
+  border:1px solid var(--line);
+  padding:17px
+}
+.panel h2{
+  font-size:14px;
+  margin:0 0 13px;
+  padding-left:9px;
+  border-left:3px solid #7b8790
+}
+.panel h3{font-size:12px;margin:16px 0 9px;color:#56626b}
+
+.formgrid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px
+}
+.full{grid-column:1/-1}
+
+label{
+  display:block;
+  font-size:11px;
+  color:var(--muted);
+  margin-bottom:5px
+}
+label.required:after{
+  content:" *";
+  color:var(--danger)
+}
+
+select,
+input[type="text"],
+input[type="password"]{
+  width:100%;
+  height:38px;
+  border:1px solid var(--line);
+  background:#fafbfb;
+  border-radius:3px;
+  padding:0 10px;
+  color:var(--text);
+  font-size:12px;
+  outline:none
+}
+select:focus,
+input:focus{
+  border-color:#8c969e
+}
+.invalid{
+  border-color:var(--danger)!important;
+  background:#fff8f8
+}
+
+.hint{
+  font-size:10px;
+  color:var(--muted);
+  margin-top:5px
+}
+
+.checkrow{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:7px
+}
+.check{
+  border:1px solid var(--line);
+  padding:9px;
+  background:#fafbfb;
+  font-size:11px;
+  cursor:pointer
+}
+.check input{
+  width:auto;
+  height:auto;
+  margin-right:5px
+}
+
+.actions{
+  display:flex;
+  gap:8px;
+  margin-top:15px;
+  flex-wrap:wrap
+}
+button{
+  border:1px solid var(--accent);
+  background:var(--accent);
+  color:white;
+  padding:10px 15px;
+  border-radius:3px;
+  cursor:pointer;
+  font-size:12px
+}
+button.alt{
+  background:white;
+  color:var(--accent)
+}
+button:disabled{
+  opacity:.55;
+  cursor:not-allowed
+}
+
+.right{
+  display:grid;
+  grid-template-rows:auto auto auto;
+  gap:14px
+}
+.preview{
+  background:#fff;
+  border:1px solid var(--line);
+  min-height:360px;
+  padding:18px
+}
+
+.board{
+  border:1px solid #cfd5d9;
+  background:#fff;
+  min-height:315px;
+  padding:10px;
+  display:grid;
+  grid-template-columns:1fr 1.25fr;
+  grid-template-rows:1.25fr .8fr .65fr;
+  gap:7px
+}
+.box{
+  border:1px solid #d9dde0;
+  background:#f9fafb;
+  padding:9px;
+  font-size:10px;
+  color:#6e7880
+}
+.box b{
+  display:block;
+  color:#46515a;
+  font-size:11px;
+  margin-bottom:6px
+}
+.wide{grid-column:1/-1}
+
+.output{
+  background:#fff;
+  border:1px solid var(--line);
+  padding:17px
+}
+.outputhead{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px
+}
+.outputhead h2{
+  margin:0;
+  font-size:14px
+}
+
+.prompt{
+  margin-top:10px;
+  background:#fafbfb;
+  border:1px solid var(--line);
+  padding:15px;
+  min-height:150px;
+  white-space:pre-wrap;
+  font-size:12px;
+  line-height:1.8;
+  max-height:360px;
+  overflow:auto
+}
+
+.error{
+  color:var(--danger);
+  font-size:11px;
+  margin-top:8px;
+  display:none
+}
+.tag{
+  display:inline-block;
+  padding:3px 7px;
+  background:#eef1f3;
+  border:1px solid #dce1e4;
+  margin-right:5px;
+  margin-bottom:5px;
+  font-size:10px
+}
+
+/* AI 图片生成 */
+.ai-panel{
+  background:#fff;
+  border:1px solid var(--line);
+  padding:17px
+}
+.ai-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:12px
+}
+.ai-head h2{
+  font-size:14px;
+  margin:0
+}
+.ai-status{
+  font-size:10px;
+  color:var(--muted)
+}
+
+.ai-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px
+}
+.ai-full{
+  grid-column:1/-1
+}
+
+.reference-box{
+  border:1px dashed #c9d0d5;
+  background:#fafbfb;
+  padding:12px;
+  margin-top:10px
+}
+.reference-preview{
+  display:none;
+  position:relative;
+  width:180px;
+  margin-top:10px
+}
+.reference-preview img{
+  display:block;
+  width:180px;
+  max-height:180px;
+  object-fit:contain;
+  border:1px solid var(--line);
+  background:#fff
+}
+.reference-remove{
+  position:absolute;
+  top:5px;
+  right:5px;
+  padding:4px 7px;
+  font-size:10px;
+  border:1px solid var(--danger);
+  background:#fff;
+  color:var(--danger)
+}
+
+.ai-actions{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  flex-wrap:wrap;
+  margin-top:12px
+}
+.generate-ai{
+  min-width:130px;
+  font-weight:600
+}
+
+.ai-result{
+  margin-top:14px;
+  display:none;
+  border-top:1px solid var(--line);
+  padding-top:14px
+}
+.ai-result img{
+  display:block;
+  max-width:100%;
+  max-height:900px;
+  margin:0 auto;
+  border:1px solid var(--line);
+  background:#f5f6f6
+}
+.ai-result-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:10px
+}
+
+.ai-message{
+  margin-top:10px;
+  font-size:11px;
+  line-height:1.7;
+  color:var(--muted);
+  white-space:pre-wrap
+}
+.ai-message.error-msg{
+  color:var(--danger)
+}
+
+.api-note{
+  font-size:10px;
+  line-height:1.6;
+  color:var(--muted);
+  margin-top:8px
+}
+
+.file-input{
+  font-size:11px;
+  width:100%;
+  padding:8px 0
+}
+
+@media(max-width:1050px){
+  .layout{grid-template-columns:1fr}
+  .status{text-align:left}
+  .board{min-height:260px}
+}
+@media(max-width:620px){
+  .formgrid,
+  .ai-grid{
+    grid-template-columns:1fr
+  }
+  .checkrow{
+    grid-template-columns:1fr 1fr
+  }
+  .top{
+    display:block
+  }
+  .status{
+    margin-top:12px
+  }
+  .ai-full{
+    grid-column:auto
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+<header class="top">
+  <div>
+    <h1>角色定妆照 · 提示词生成器 Pro</h1>
+    <div class="sub">
+      少填文字，多选选项；必要字段强制完成，其余自动采用专业默认值。
+    </div>
+  </div>
+
+  <div class="status">
+    影视定妆照 / 三视图 / 五宫格表情 / 服装细节 / 道具 / 色卡 / 场景<br>
+    模块化角色设定集工作流
+  </div>
+</header>
+
+<div class="layout">
+
+<main>
+
+<!-- ① 核心人设 -->
+<section class="panel">
+<h2>① 核心人设（必填）</h2>
+
+<div class="formgrid">
+
+<div>
+<label class="required">性别</label>
+<select id="gender">
+<option value="">请选择</option>
+<option>男性</option>
+<option>女性</option>
+<option>中性气质</option>
+</select>
+</div>
+
+<div>
+<label class="required">年龄</label>
+<select id="age">
+<option value="">请选择</option>
+<option>少年（16–18岁）</option>
+<option selected>青年（19–25岁）</option>
+<option>青年（26–30岁）</option>
+<option>成年（31–40岁）</option>
+<option>成熟（41–55岁）</option>
+<option>中年（56岁以上）</option>
+</select>
+</div>
+
+<div>
+<label class="required">世界观 / 时代</label>
+<select id="world">
+<option value="">请选择</option>
+<option>东方古典架空</option>
+<option>中国古代写实</option>
+<option>仙侠东方幻想</option>
+<option>武侠江湖</option>
+<option>宫廷权谋</option>
+<option>民国</option>
+<option>现代都市</option>
+<option>近未来</option>
+<option>西方奇幻</option>
+<option>原创幻想世界</option>
+</select>
+</div>
+
+<div>
+<label class="required">身份</label>
+<select id="identity">
+<option value="">请选择</option>
+<option>世家公子</option>
+<option>贵族小姐</option>
+<option>皇族 / 王族</option>
+<option>将军 / 武将</option>
+<option>文官 / 谋士</option>
+<option>江湖侠客</option>
+<option>医者</option>
+<option>商人</option>
+<option>学生</option>
+<option>侦探</option>
+<option>骑士</option>
+<option>法师</option>
+<option>刺客</option>
+<option>普通百姓</option>
+<option>自定义身份</option>
+</select>
+</div>
+
+<div>
+<label class="required">核心气质</label>
+<select id="temper">
+<option value="">请选择</option>
+<option>清冷温润</option>
+<option>明艳张扬</option>
+<option>温柔知性</option>
+<option>英气利落</option>
+<option>少年感</option>
+<option>成熟沉稳</option>
+<option>高贵疏离</option>
+<option>慵懒随性</option>
+<option>冷峻克制</option>
+<option>阳光开朗</option>
+<option>神秘危险</option>
+</select>
+</div>
+
+<div>
+<label class="required">人物定位</label>
+<select id="type">
+<option value="">请选择</option>
+<option>高端影视定妆照</option>
+<option>写实角色设定集</option>
+<option>电影角色档案</option>
+<option>古装美术设定</option>
+<option>时尚杂志人物</option>
+</select>
+</div>
+
+</div>
+
+<h3>外貌设定</h3>
+
+<div class="formgrid">
+
+<div>
+<label class="required">脸型</label>
+<select id="faceShape">
+<option value="">请选择</option>
+<option>鹅蛋脸</option>
+<option>小V脸</option>
+<option>偏长脸</option>
+<option>方圆脸</option>
+<option>少年感窄脸</option>
+<option>轮廓立体</option>
+</select>
+</div>
+
+<div>
+<label class="required">肤质</label>
+<select id="skin">
+<option value="">请选择</option>
+<option>自然冷白皮</option>
+<option>暖白皮</option>
+<option>小麦肤色</option>
+<option>健康自然肤色</option>
+<option>古典瓷白肤色</option>
+</select>
+</div>
+
+<div>
+<label class="required">眉眼</label>
+<select id="eyes">
+<option value="">请选择</option>
+<option>清俊细长眉眼</option>
+<option>深邃锐利</option>
+<option>温柔圆眼</option>
+<option>凤眼</option>
+<option>桃花眼</option>
+<option>英气剑眉</option>
+<option>自然少年感</option>
+</select>
+</div>
+
+<div>
+<label class="required">发型</label>
+<select id="hair">
+<option value="">请选择</option>
+<option>高束发 + 半披发</option>
+<option>古典发冠束发</option>
+<option>长发半束</option>
+<option>高马尾</option>
+<option>低马尾</option>
+<option>短发</option>
+<option>盘发</option>
+<option>自然披发</option>
+</select>
+</div>
+
+</div>
+</section>
+
+
+<!-- ② 服装 -->
+<section class="panel">
+<h2>② 服装造型（必填）</h2>
+
+<div class="formgrid">
+
+<div>
+<label class="required">服装体系</label>
+<select id="clothes">
+<option value="">请选择</option>
+<option>月白交领长袍 + 墨青外衫</option>
+<option>白色古装长袍</option>
+<option>墨色宽袖长袍</option>
+<option>青绿色文士袍</option>
+<option>华贵宫廷礼服</option>
+<option>轻甲武将服</option>
+<option>江湖侠客服</option>
+<option>仙侠飘逸长衫</option>
+<option>现代医生白大褂</option>
+<option>现代西装</option>
+<option>原创幻想服饰</option>
+</select>
+</div>
+
+<div>
+<label class="required">主色</label>
+<select id="mainColor">
+<option value="">请选择</option>
+<option>月白 / 米白 / 墨青</option>
+<option>黑 / 银灰</option>
+<option>青蓝 / 灰蓝</option>
+<option>墨绿 / 青灰</option>
+<option>朱红 / 黑</option>
+<option>金 / 深红</option>
+<option>米白 / 棕</option>
+<option>低饱和莫兰迪</option>
+</select>
+</div>
+
+<div>
+<label>面料</label>
+<select id="fabric">
+<option>细密丝绸、轻薄织纹、自然垂坠</option>
+<option>锦缎、暗纹、挺括垂坠</option>
+<option>亚麻、棉麻、自然粗纹</option>
+<option>薄纱、半透明层叠</option>
+<option>皮革、金属、硬挺结构</option>
+<option>现代精纺面料</option>
+</select>
+</div>
+
+<div>
+<label>配饰</label>
+<select id="accessory">
+<option>玉佩、素银发冠、窄袖护腕</option>
+<option>金冠、玉佩、华贵腰饰</option>
+<option>折扇、香囊、玉簪</option>
+<option>剑、护腕、腰牌</option>
+<option>耳饰、项链、戒指</option>
+<option>简洁无明显配饰</option>
+</select>
+</div>
+
+<div>
+<label>鞋履</label>
+<select id="shoes">
+<option>黑色布靴</option>
+<option>黑色长靴</option>
+<option>古典软底鞋</option>
+<option>白色简约布鞋</option>
+<option>现代皮鞋</option>
+<option>现代运动鞋</option>
+</select>
+</div>
+
+<div>
+<label>妆容</label>
+<select id="makeup">
+<option>淡妆、自然眉、低饱和唇色</option>
+<option>几乎素颜、真实皮肤纹理</option>
+<option>精致古装妆、清透底妆</option>
+<option>英气眉眼、低饱和妆容</option>
+<option>华贵宫廷妆</option>
+<option>冷感时尚妆</option>
+</select>
+</div>
+
+</div>
+</section>
+
+
+<!-- ③ 摄影 -->
+<section class="panel">
+<h2>③ 画面风格与摄影（必填）</h2>
+
+<div class="formgrid">
+
+<div>
+<label class="required">写实程度</label>
+<select id="real">
+<option value="">请选择</option>
+<option>电影级写实真人摄影</option>
+<option>高端影视定妆照</option>
+<option>商业棚拍摄影</option>
+<option>写实概念原画</option>
+<option>半写实角色设计</option>
+</select>
+</div>
+
+<div>
+<label class="required">光线</label>
+<select id="light">
+<option value="">请选择</option>
+<option>柔和室内柔光 + 轻微轮廓光</option>
+<option>冷色棚拍柔光</option>
+<option>电影侧光</option>
+<option>自然窗光</option>
+<option>低调戏剧光</option>
+<option>明亮商业摄影光</option>
+</select>
+</div>
+
+<div>
+<label class="required">背景</label>
+<select id="background">
+<option value="">请选择</option>
+<option>浅灰白纯色摄影棚</option>
+<option>米白古典摄影棚</option>
+<option>浅灰渐变</option>
+<option>纯白无缝背景</option>
+<option>人物身份相关室内场景</option>
+</select>
+</div>
+
+<div>
+<label class="required">色彩</label>
+<select id="palette">
+<option value="">请选择</option>
+<option>冷调莫兰迪低饱和</option>
+<option>米白 + 月白 + 墨青</option>
+<option>冷蓝灰电影色</option>
+<option>暖金古典色</option>
+<option>黑红权谋色</option>
+<option>青绿东方色</option>
+</select>
+</div>
+
+<div>
+<label>细节等级</label>
+<select id="detail">
+<option>8K超清、真实皮肤纹理、真实毛发、织物微距细节</option>
+<option>超高清、自然皮肤、真实摄影颗粒</option>
+<option>高细节、电影级材质表现</option>
+</select>
+</div>
+
+<div>
+<label>镜头感</label>
+<select id="lens">
+<option>85mm人像镜头、浅景深、自然透视</option>
+<option>50mm标准人像、自然透视</option>
+<option>35mm环境人像、轻微空间感</option>
+<option>商业摄影棚镜头</option>
+</select>
+</div>
+
+</div>
+</section>
+
+
+<!-- ④ 展板 -->
+<section class="panel">
+<h2>④ 展板模块（默认全选）</h2>
+
+<div class="checkrow">
+
+<label class="check">
+<input type="checkbox" checked data-m="portrait">
+人物胸像
+</label>
+
+<label class="check">
+<input type="checkbox" checked data-m="views">
+三视图
+</label>
+
+<label class="check">
+<input type="checkbox" checked data-m="expressions">
+五宫格表情
+</label>
+
+<label class="check">
+<input type="checkbox" checked data-m="costume">
+服装细节
+</label>
+
+<label class="check">
+<input type="checkbox" checked data-m="props">
+道具静物
+</label>
+
+<label class="check">
+<input type="checkbox" checked data-m="palette">
+色卡材质
+</label>
+
+<label class="check">
+<input type="checkbox" checked data-m="scene">
+场景小插图
+</label>
+
+<label class="check">
+<input type="checkbox" checked data-m="items">
+随身物品
+</label>
+
+</div>
+
+<div class="actions">
+<button onclick="generate()">生成完整提示词</button>
+<button class="alt" onclick="randomize()">随机一套人设</button>
+<button class="alt" onclick="resetForm()">恢复默认</button>
+</div>
+
+<div id="error" class="error"></div>
+
+</section>
+
+</main>
+
+
+<aside class="right">
+
+<!-- 原来的展板预览 -->
+<section class="preview">
+
+<h2 style="font-size:14px;margin:0 0 12px">
+展板布局预览
+</h2>
+
+<div class="board">
+
+<div class="box">
+<b>左上｜人物胸像</b>
+角色定妆特写、发型、妆容、身份气质
+</div>
+
+<div class="box">
+<b>右上｜三视图</b>
+正面 / 侧面 / 背面，全身造型统一
+</div>
+
+<div class="box wide">
+<b>中间｜五宫格表情</b>
+亲和微笑 / 专注认真 / 沉着冷静 / 担忧焦急 / 疲惫倦怠
+</div>
+
+<div class="box">
+<b>左下｜服装细节</b>
+领口、袖口、面料、配饰、鞋履
+</div>
+
+<div class="box">
+<b>右下｜道具静物</b>
+身份相关物件平铺俯拍
+</div>
+
+<div class="box wide">
+<b>底部｜色彩 / 材质 / 妆容 / 随身物品 / 场景</b>
+统一冷暖色系与角色身份视觉语言
+</div>
+
+</div>
+</section>
+
+
+<!-- 原来的提示词输出 -->
+<section class="output">
+
+<div class="outputhead">
+<h2>生成结果</h2>
+<button class="alt" onclick="copyPrompt()">复制</button>
+</div>
+
+<div id="prompt" class="prompt">
+完成必填项后点击「生成完整提示词」。
+</div>
+
+</section>
+
+
+<!-- 新增：AI 图片生成 -->
+<section class="ai-panel">
+
+<div class="ai-head">
+<h2>AI 生成图片</h2>
+<div class="ai-status" id="aiStatus">
+Agnes Image 2.5 Flash
+</div>
+</div>
+
+<div class="ai-grid">
+
+<div>
+<label>Base URL</label>
+<input
+  id="apiBase"
+  type="text"
+  value="https://apihub.agnes-ai.com"
+  placeholder="https://apihub.agnes-ai.com"
+>
+</div>
+
+<div>
+<label>模型</label>
+<input
+  id="model"
+  type="text"
+  value="agnes-image-2.5-flash"
+  placeholder="agnes-image-2.5-flash"
+>
+</div>
+
+<div>
+<label>API Key</label>
+<input
+  id="apiKey"
+  type="password"
+  placeholder="输入 Agnes API Key"
+  autocomplete="off"
+>
+</div>
+
+<div>
+<label>输出尺寸</label>
+<select id="imageSize">
+<option value="1K">1K</option>
+<option value="2K" selected>2K</option>
+<option value="3K">3K</option>
+<option value="4K">4K</option>
+</select>
+</div>
+
+<div>
+<label>宽高比</label>
+<select id="imageRatio">
+<option value="1:1">1:1</option>
+<option value="3:4">3:4</option>
+<option value="4:3">4:3</option>
+<option value="16:9" selected>16:9</option>
+<option value="9:16">9:16</option>
+<option value="2:3">2:3</option>
+<option value="3:2">3:2</option>
+<option value="21:9">21:9</option>
+</select>
+</div>
+
+<div>
+<label>参考图</label>
+<input
+  id="referenceImage"
+  class="file-input"
+  type="file"
+  accept="image/*"
+  onchange="handleReferenceImage(event)"
+>
+</div>
+
+<div class="ai-full">
+<div class="reference-box">
+
+<div class="hint">
+可选：上传一张人物参考图。上传后会以 Data URI 形式发送给 Agnes，用于图生图；不上传就是纯文生图。
+</div>
+
+<div id="referencePreview" class="reference-preview">
+<img id="referenceImg" src="" alt="参考图预览">
+<button
+  type="button"
+  class="reference-remove"
+  onclick="removeReferenceImage()"
+>
+删除
+</button>
+</div>
+
+</div>
+</div>
+
+</div>
+
+<div class="api-note">
+提示：API Key 会保存在当前浏览器 localStorage 中，方便下次继续使用。
+由于这是纯前端 Netlify 页面，API Key 会存在浏览器端，不适合放生产环境公开给其他用户。
+</div>
+
+<div class="ai-actions">
+
+<button
+  id="generateImageBtn"
+  class="generate-ai"
+  onclick="generateImage()"
+>
+AI 生成图片
+</button>
+
+<button
+  class="alt"
+  onclick="saveApiSettings()"
+>
+保存 API 设置
+</button>
+
+<button
+  class="alt"
+  onclick="clearApiKey()"
+>
+清除 API Key
+</button>
+
+</div>
+
+<div id="aiMessage" class="ai-message"></div>
+
+<div id="aiResult" class="ai-result">
+
+<img id="generatedImage" src="" alt="AI 生成结果">
+
+<div class="ai-result-actions">
+
+<a
+  id="openImageLink"
+  href="#"
+  target="_blank"
+  rel="noopener"
+  style="display:none;text-decoration:none"
+>
+<button type="button" class="alt">
+打开原图
+</button>
+</a>
+
+<button
+  type="button"
+  class="alt"
+  onclick="clearGeneratedImage()"
+>
+清除图片
+</button>
+
+</div>
+
+</div>
+
+</section>
+
+</aside>
+
+</div>
+</div>
+
+
+<script>
+
+/* =========================================================
+   原版提示词生成逻辑
+   ========================================================= */
+
+const ids = [
+  "gender",
+  "age",
+  "world",
+  "identity",
+  "temper",
+  "type",
+  "faceShape",
+  "skin",
+  "eyes",
+  "hair",
+  "clothes",
+  "mainColor",
+  "real",
+  "light",
+  "background",
+  "palette"
+];
+
+function val(id){
+  return document.getElementById(id).value;
+}
+
+function requiredCheck(){
+
+  let ok = true;
+  let names = [];
+
+  ids.forEach(id => {
+
+    const e = document.getElementById(id);
+
+    e.classList.remove("invalid");
+
+    if(!e.value){
+      e.classList.add("invalid");
+      ok = false;
+
+      const label = e.previousElementSibling
+        ? e.previousElementSibling.textContent.replace(" *","")
+        : id;
+
+      names.push(label);
+    }
+
+  });
+
+  const er = document.getElementById("error");
+
+  if(!ok){
+    er.style.display = "block";
+    er.textContent = "请先完成必填项： " + names.join("、");
+  }else{
+    er.style.display = "none";
+  }
+
+  return ok;
+}
+
+function selectedModules(){
+  return [
+    ...document.querySelectorAll("[data-m]:checked")
+  ].map(x => x.dataset.m);
+}
+
+
+/*
+ * 注意：
+ * 这里保持你最早版本的提示词内容和结构。
+ * AI 生成时会直接使用这里生成的 p。
+ * 不再对 p 做二次包装或重写。
+ */
+function generate(){
+
+  if(!requiredCheck()) return;
+
+  const modules = selectedModules();
+
+  const p = `制作一张「古装人物完整定妆照／角色设定集」风格的模块化角色展示展板。
+
+【人物核心】
+${val("age")}、${val("gender")}，${val("world")}世界观，身份为${val("identity")}，人物定位为${val("type")}；整体气质${val("temper")}。
+外貌：${val("faceShape")}，${val("skin")}，${val("eyes")}，发型为${val("hair")}。
+
+【服装造型】
+${val("clothes")}，主色为${val("mainColor")}；面料采用${val("fabric")}；配饰为${val("accessory")}；鞋履为${val("shoes")}；妆容为${val("makeup")}。
+
+【整体版式】
+浅灰白色简约画册版式，白底，细浅灰色边框，模块化分栏排版，留白充足，清晰细线分隔，统一简约中文小标题，像高端影视角色定妆照与专业美术设定集结合的角色档案页。所有模块保持同一人物、同一套服装、同一套发型、同一张脸和统一色彩体系。
+
+${modules.includes("portrait") ? `【左上｜人物胸像特写】
+人物胸像定妆照，重点表现${val("temper")}、面部特征、发型与服装领口；${val("real")}，${val("light")}，${val("background")}，${val("lens")}，${val("detail")}。` : ""}
+
+${modules.includes("views") ? `【右上｜完整三视图】
+同一人物、同一张脸、同一造型，严格保持五官、年龄、发型和服装一致；正面站姿、侧面站姿、背面站姿三连全身视图，完整展示服装结构、配饰与鞋履；纯净背景，人物比例自然，写实真人定妆照质感。` : ""}
+
+${modules.includes("expressions") ? `【中间｜五宫格面部表情】
+同一人物五宫格面部特写，五官、发型、年龄、妆容完全一致，只改变神态：亲和微笑、专注认真、沉着冷静、担忧焦急、疲惫倦怠；每格构图统一，面部比例一致，真实皮肤纹理与毛发。` : ""}
+
+${modules.includes("costume") ? `【左下｜服装造型细节】
+拼接式局部微距特写：领口、袖口、衣襟、${val("fabric")}、${val("accessory")}、腰部结构、${val("shoes")}；强调针脚、织物纹理、自然褶皱、材质差异与服装结构。` : ""}
+
+${modules.includes("props") ? `【右下｜人物道具静物】
+根据${val("identity")}身份设计道具并平铺俯拍，例如身份凭证、书册、折扇、玉佩、印章、文房用品、随身工具等；白色或浅灰背景，排列整洁，高级静物摄影与影视道具设定集质感。` : ""}
+
+${modules.includes("palette") ? `【底部｜色彩与材质】
+制作${val("palette")}配色色卡、服装面料小样、纹理微距、眉眼与妆容特写；所有色彩与材质服务于人物身份和世界观。` : ""}
+
+${modules.includes("items") ? `【底部｜随身物品】
+根据${val("identity")}与人物性格设计3–5件随身物品，体现角色生活习惯、身份和审美，采用整洁的小型静物图。` : ""}
+
+${modules.includes("scene") ? `【底部｜场景小插图】
+加入一幅与${val("world")}和${val("identity")}匹配的小型环境插图，作为人物生活背景；不抢主体，不增加无关人物，保持同一冷暖色调。` : ""}
+
+【统一视觉要求】
+${val("real")}，${val("light")}，${val("background")}，${val("palette")}，${val("lens")}，${val("detail")}；真实自然的皮肤、毛发和织物，不塑料皮肤，不过度磨皮；避免现代元素与时代错置；不同模块中的人物脸部必须保持一致；不要多余人物、不要乱码、不要水印、不要变形肢体、不要重复道具、不要杂乱背景。`;
+
+  document.getElementById("prompt").textContent = p;
+}
+
+
+/* =========================================================
+   复制
+   ========================================================= */
+
+async function copyPrompt(){
+
+  const t = document.getElementById("prompt").textContent;
+
+  if(!t || t.includes("完成必填项后")){
+    alert("请先生成完整提示词");
+    return;
+  }
+
+  try{
+    await navigator.clipboard.writeText(t);
+    alert("提示词已复制");
+  }catch(e){
+    alert("复制失败，请手动复制");
+  }
+}
+
+
+/* =========================================================
+   随机人设
+   ========================================================= */
+
+function randomize(){
+
+  const choices = {
+
+    gender:[
+      "男性",
+      "女性",
+      "中性气质"
+    ],
+
+    age:[
+      "少年（16–18岁）",
+      "青年（19–25岁）",
+      "青年（26–30岁）",
+      "成年（31–40岁）"
+    ],
+
+    world:[
+      "东方古典架空",
+      "中国古代写实",
+      "仙侠东方幻想",
+      "武侠江湖",
+      "宫廷权谋",
+      "民国",
+      "现代都市",
+      "原创幻想世界"
+    ],
+
+    identity:[
+      "世家公子",
+      "皇族 / 王族",
+      "将军 / 武将",
+      "文官 / 谋士",
+      "江湖侠客",
+      "医者",
+      "侦探",
+      "骑士",
+      "法师"
+    ],
+
+    temper:[
+      "清冷温润",
+      "英气利落",
+      "高贵疏离",
+      "温柔知性",
+      "冷峻克制",
+      "阳光开朗",
+      "神秘危险"
+    ],
+
+    faceShape:[
+      "鹅蛋脸",
+      "小V脸",
+      "少年感窄脸",
+      "轮廓立体"
+    ],
+
+    skin:[
+      "自然冷白皮",
+      "暖白皮",
+      "健康自然肤色",
+      "古典瓷白肤色"
+    ],
+
+    eyes:[
+      "清俊细长眉眼",
+      "深邃锐利",
+      "温柔圆眼",
+      "凤眼",
+      "英气剑眉"
+    ],
+
+    hair:[
+      "高束发 + 半披发",
+      "古典发冠束发",
+      "长发半束",
+      "低马尾"
+    ],
+
+    clothes:[
+      "月白交领长袍 + 墨青外衫",
+      "白色古装长袍",
+      "墨色宽袖长袍",
+      "青绿色文士袍",
+      "轻甲武将服",
+      "江湖侠客服",
+      "仙侠飘逸长衫"
+    ],
+
+    mainColor:[
+      "月白 / 米白 / 墨青",
+      "黑 / 银灰",
+      "青蓝 / 灰蓝",
+      "墨绿 / 青灰",
+      "暖金古典色",
+      "低饱和莫兰迪"
+    ],
+
+    real:[
+      "电影级写实真人摄影",
+      "高端影视定妆照",
+      "商业棚拍摄影",
+      "写实概念原画"
+    ],
+
+    light:[
+      "柔和室内柔光 + 轻微轮廓光",
+      "冷色棚拍柔光",
+      "电影侧光",
+      "自然窗光"
+    ],
+
+    background:[
+      "浅灰白纯色摄影棚",
+      "米白古典摄影棚",
+      "浅灰渐变",
+      "纯白无缝背景"
+    ],
+
+    palette:[
+      "冷调莫兰迪低饱和",
+      "米白 + 月白 + 墨青",
+      "冷蓝灰电影色",
+      "青绿东方色"
+    ]
+
+  };
+
+  Object.entries(choices).forEach(([id,a])=>{
+    document.getElementById(id).value =
+      a[Math.floor(Math.random() * a.length)];
+  });
+
+  generate();
+}
+
+
+/* =========================================================
+   恢复默认
+   ========================================================= */
+
+function resetForm(){
+  location.reload();
+}
+
+
+/* =========================================================
+   Agnes AI 设置
+   ========================================================= */
+
+const API_STORAGE_KEY = "character_prompt_agnes_settings_v1";
+
+function loadApiSettings(){
+
+  try{
+
+    const saved = localStorage.getItem(API_STORAGE_KEY);
+
+    if(!saved) return;
+
+    const data = JSON.parse(saved);
+
+    if(data.apiBase){
+      document.getElementById("apiBase").value = data.apiBase;
+    }
+
+    if(data.model){
+      document.getElementById("model").value = data.model;
+    }
+
+    if(data.apiKey){
+      document.getElementById("apiKey").value = data.apiKey;
+    }
+
+    if(data.imageSize){
+      document.getElementById("imageSize").value = data.imageSize;
+    }
+
+    if(data.imageRatio){
+      document.getElementById("imageRatio").value = data.imageRatio;
+    }
+
+  }catch(e){
+    console.warn("读取 API 设置失败", e);
+  }
+}
+
+
+function saveApiSettings(){
+
+  const data = {
+    apiBase: document.getElementById("apiBase").value.trim(),
+    model: document.getElementById("model").value.trim(),
+    apiKey: document.getElementById("apiKey").value.trim(),
+    imageSize: document.getElementById("imageSize").value,
+    imageRatio: document.getElementById("imageRatio").value
+  };
+
+  try{
+
+    localStorage.setItem(
+      API_STORAGE_KEY,
+      JSON.stringify(data)
+    );
+
+    showAIMessage("API 设置已保存。");
+
+  }catch(e){
+
+    showAIMessage(
+      "API 设置保存失败：" + e.message,
+      true
+    );
+  }
+}
+
+
+function clearApiKey(){
+
+  document.getElementById("apiKey").value = "";
+
+  try{
+
+    const saved = localStorage.getItem(API_STORAGE_KEY);
+
+    if(saved){
+
+      const data = JSON.parse(saved);
+      data.apiKey = "";
+
+      localStorage.setItem(
+        API_STORAGE_KEY,
+        JSON.stringify(data)
+      );
+    }
+
+  }catch(e){}
+
+  showAIMessage("API Key 已清除。");
+}
+
+
+/* =========================================================
+   AI 消息
+   ========================================================= */
+
+function showAIMessage(message, isError=false){
+
+  const el = document.getElementById("aiMessage");
+
+  el.textContent = message;
+  el.className = isError
+    ? "ai-message error-msg"
+    : "ai-message";
+}
+
+
+/* =========================================================
+   参考图片
+   ========================================================= */
+
+let referenceImageData = "";
+
+
+function handleReferenceImage(event){
+
+  const file = event.target.files && event.target.files[0];
+
+  if(!file){
+    return;
+  }
+
+  if(!file.type.startsWith("image/")){
+    alert("请选择图片文件");
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = function(){
+
+    referenceImageData = reader.result;
+
+    document.getElementById("referenceImg").src =
+      referenceImageData;
+
+    document.getElementById("referencePreview").style.display =
+      "block";
+
+    showAIMessage(
+      "参考图已加载。点击「AI 生成图片」后会使用该图片进行图生图。"
+    );
+  };
+
+  reader.onerror = function(){
+
+    showAIMessage(
+      "读取参考图失败。",
+      true
+    );
+  };
+
+  reader.readAsDataURL(file);
+}
+
+
+function removeReferenceImage(){
+
+  referenceImageData = "";
+
+  document.getElementById("referenceImage").value = "";
+
+  document.getElementById("referenceImg").src = "";
+
+  document.getElementById("referencePreview").style.display =
+    "none";
+
+  showAIMessage("参考图已删除，将使用纯文生图。");
+}
+
+
+/* =========================================================
+   Agnes AI 图片生成
+   ========================================================= */
+
+async function generateImage(){
+
+  /*
+   * 关键：
+   * 这里直接取得原始提示词。
+   * 不进行任何二次改写。
+   */
+  const prompt = document.getElementById("prompt").textContent.trim();
+
+  if(
+    !prompt ||
+    prompt === "完成必填项后点击「生成完整提示词」。"
+  ){
+
+    alert("请先点击「生成完整提示词」");
+    return;
+  }
+
+  const apiBase =
+    document.getElementById("apiBase").value.trim()
+      .replace(/\/+$/,"");
+
+  const apiKey =
+    document.getElementById("apiKey").value.trim();
+
+  const model =
+    document.getElementById("model").value.trim()
+      || "agnes-image-2.5-flash";
+
+  const size =
+    document.getElementById("imageSize").value;
+
+  const ratio =
+    document.getElementById("imageRatio").value;
+
+  if(!apiBase){
+
+    showAIMessage(
+      "请填写 Base URL。",
+      true
+    );
+
+    return;
+  }
+
+  if(!apiKey){
+
+    showAIMessage(
+      "请填写 Agnes API Key。",
+      true
+    );
+
+    return;
+  }
+
+  const btn =
+    document.getElementById("generateImageBtn");
+
+  btn.disabled = true;
+  btn.textContent = "生成中...";
+
+  showAIMessage(
+    "正在发送原始提示词给 Agnes，请等待图片生成。"
+  );
+
+  document.getElementById("aiResult").style.display =
+    "none";
+
+  document.getElementById("openImageLink").style.display =
+    "none";
+
+  /*
+   * Agnes 文档要求：
+   *
+   * model
+   * prompt
+   * size
+   * ratio 可选
+   *
+   * 参考图放：
+   * extra_body.image
+   *
+   * URL 输出：
+   * extra_body.response_format = "url"
+   *
+   * 这里不再发送 quality。
+   */
+
+  const body = {
+    model: model,
+    prompt: prompt,
+    size: size,
+    ratio: ratio,
+    extra_body: {
+      response_format: "url"
+    }
+  };
+
+  if(referenceImageData){
+
+    body.extra_body.image = [
+      referenceImageData
+    ];
+
+  }
+
+  const endpoint =
+    apiBase + "/v1/images/generations";
+
+  try{
+
+    const response = await fetch(
+      endpoint,
+      {
+        method:"POST",
+
+        headers:{
+          "Authorization":"Bearer " + apiKey,
+          "Content-Type":"application/json"
+        },
+
+        body:JSON.stringify(body)
+      }
+    );
+
+    const rawText = await response.text();
+
+    let data = null;
+
+    try{
+      data = JSON.parse(rawText);
+    }catch(e){
+      data = null;
+    }
+
+    if(!response.ok){
+
+      let message = "";
+
+      if(data){
+
+        message =
+          data.error?.message ||
+          data.message ||
+          data.error ||
+          JSON.stringify(data);
+
+      }else{
+
+        message = rawText || response.statusText;
+      }
+
+      throw new Error(
+        "HTTP " +
+        response.status +
+        "：" +
+        message
+      );
+    }
+
+    /*
+     * Agnes 返回：
+     *
+     * data[0].url
+     *
+     * 或者：
+     *
+     * data[0].b64_json
+     */
+
+    const item =
+      data &&
+      Array.isArray(data.data) &&
+      data.data[0]
+        ? data.data[0]
+        : null;
+
+    if(!item){
+
+      throw new Error(
+        "API 已返回，但没有找到 data[0] 图片结果。\n" +
+        rawText
+      );
+    }
+
+    let imageSrc = "";
+    let originalUrl = "";
+
+    if(item.url){
+
+      imageSrc = item.url;
+      originalUrl = item.url;
+
+    }else if(item.b64_json){
+
+      imageSrc =
+        "data:image/png;base64," +
+        item.b64_json;
+
+    }else{
+
+      throw new Error(
+        "没有找到图片 URL 或 Base64 数据。"
+      );
+    }
+
+    const img =
+      document.getElementById("generatedImage");
+
+    img.src = imageSrc;
+
+    img.onload = function(){
+
+      document.getElementById("aiResult").style.display =
+        "block";
+    };
+
+    /*
+     * Base64 图片没有独立 URL，
+     * 所以只有 URL 输出时显示「打开原图」。
+     */
+
+    if(originalUrl){
+
+      const link =
+        document.getElementById("openImageLink");
+
+      link.href = originalUrl;
+      link.style.display = "inline-block";
+    }
+
+    document.getElementById("aiResult").style.display =
+      "block";
+
+    showAIMessage(
+      "图片生成完成。"
+    );
+
+    /*
+     * 顺便保存当前 API 设置，
+     * 这样用户下一次刷新不用重新填写。
+     */
+    saveApiSettingsSilently();
+
+  }catch(error){
+
+    console.error(error);
+
+    showAIMessage(
+      "图片生成失败：\n" +
+      (error?.message || String(error)),
+      true
+    );
+
+  }finally{
+
+    btn.disabled = false;
+    btn.textContent = "AI 生成图片";
+  }
+}
+
+
+/* =========================================================
+   静默保存
+   ========================================================= */
+
+function saveApiSettingsSilently(){
+
+  const data = {
+
+    apiBase:
+      document.getElementById("apiBase").value.trim(),
+
+    model:
+      document.getElementById("model").value.trim(),
+
+    apiKey:
+      document.getElementById("apiKey").value.trim(),
+
+    imageSize:
+      document.getElementById("imageSize").value,
+
+    imageRatio:
+      document.getElementById("imageRatio").value
+  };
+
+  try{
+
+    localStorage.setItem(
+      API_STORAGE_KEY,
+      JSON.stringify(data)
+    );
+
+  }catch(e){}
+}
+
+
+/* =========================================================
+   清除生成图片
+   ========================================================= */
+
+function clearGeneratedImage(){
+
+  document.getElementById("generatedImage").src = "";
+
+  document.getElementById("aiResult").style.display =
+    "none";
+
+  document.getElementById("openImageLink").style.display =
+    "none";
+
+  document.getElementById("openImageLink").removeAttribute(
+    "href"
+  );
+
+  showAIMessage("已清除当前生成图片。");
+}
+
+
+/* =========================================================
+   初始化
+   ========================================================= */
+
+loadApiSettings();
+
+/*
+ * 保持原版：页面加载后执行 generate()
+ * 如果必填项还没选择，会显示原来的提示。
+ */
+generate();
+
+</script>
+
+</body>
+</html>
+```
