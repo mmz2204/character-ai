@@ -367,6 +367,88 @@ button:disabled{
   padding:8px 0
 }
 
+/* 历史记录 */
+.history-panel{
+  background:#fff;
+  border:1px solid var(--line);
+  padding:17px
+}
+.history-list{
+  margin-top:10px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  max-height:460px;
+  overflow:auto
+}
+.history-item{
+  border:1px solid var(--line);
+  background:#fafbfb;
+  padding:10px;
+  display:grid;
+  grid-template-columns:54px 1fr auto;
+  gap:10px;
+  align-items:start;
+  cursor:pointer
+}
+.history-item:hover{
+  background:#eef1f3
+}
+.history-thumb{
+  width:54px;
+  height:54px;
+  border:1px solid var(--line);
+  background:#eef1f3;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:9px;
+  color:var(--muted);
+  overflow:hidden
+}
+.history-thumb img{
+  width:100%;
+  height:100%;
+  object-fit:cover
+}
+.history-meta{
+  font-size:10px;
+  color:var(--muted);
+  margin-bottom:4px
+}
+.history-meta .h-tag{
+  display:inline-block;
+  background:#eef1f3;
+  border:1px solid #dce1e4;
+  padding:1px 5px;
+  margin-right:4px
+}
+.history-prompt{
+  font-size:11px;
+  color:var(--text);
+  line-height:1.5;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  white-space:pre-wrap
+}
+.history-actions{
+  display:flex;
+  flex-direction:column;
+  gap:4px
+}
+.history-actions button{
+  padding:4px 8px;
+  font-size:10px
+}
+.history-empty{
+  font-size:11px;
+  color:var(--muted);
+  padding:24px 0;
+  text-align:center
+}
+
 @media(max-width:1050px){
   .layout{grid-template-columns:1fr}
   .status{text-align:left}
@@ -820,7 +902,7 @@ button:disabled{
 </div>
 
 <div class="actions">
-<button onclick="generate()">生成完整提示词</button>
+<button onclick="generate(true)">生成完整提示词</button>
 <button class="alt" onclick="randomize()">随机一套人设</button>
 <button class="alt" onclick="resetForm()">恢复默认</button>
 </div>
@@ -887,6 +969,21 @@ button:disabled{
 
 <div id="prompt" class="prompt">
 完成必填项后点击「生成完整提示词」。
+</div>
+
+</section>
+
+
+<!-- 历史记录 -->
+<section class="history-panel">
+
+<div class="outputhead">
+<h2>历史记录</h2>
+<button class="alt" onclick="clearHistory()">清空历史</button>
+</div>
+
+<div id="historyList" class="history-list">
+<div class="history-empty">还没有历史记录。点「生成完整提示词」会自动保存，最多保留 50 条。</div>
 </div>
 
 </section>
@@ -1204,7 +1301,7 @@ function onModeChange(){
  * 提示词生成。
  * AI 生成时会直接使用这里生成的 p。
  */
-function generate(){
+function generate(record){
 
   if(!requiredCheck()) return;
 
@@ -1304,6 +1401,128 @@ ${texture}；人物五官端正，不要乱码、不要水印、不要变形肢�
   }
 
   document.getElementById("prompt").textContent = p;
+
+  if(record){
+    recordHistory(p);
+  }else{
+    currentHistoryId = null;
+  }
+}
+
+
+/* =========================================================
+   历史记录
+   ========================================================= */
+
+const HISTORY_KEY = "character_prompt_history_v1";
+const HISTORY_MAX = 50;
+let currentHistoryId = null;
+
+const MODE_LABEL = {
+  board: "完整展板",
+  bust: "半身定妆",
+  fullbody: "全身立绘",
+  avatar: "头像",
+  poster: "海报"
+};
+
+function loadHistory(){
+  try{
+    return JSON.parse(localStorage.getItem(HISTORY_KEY)) || [];
+  }catch(e){
+    return [];
+  }
+}
+
+function saveHistory(list){
+  try{
+    localStorage.setItem(
+      HISTORY_KEY,
+      JSON.stringify(list.slice(0, HISTORY_MAX))
+    );
+  }catch(e){}
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"]/g, c => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;"
+  }[c]));
+}
+
+function recordHistory(promptText){
+  const mode = selectedOutputMode();
+  const rec = {
+    id: Date.now() + "_" + Math.random().toString(36).slice(2,7),
+    time: new Date().toLocaleString("zh-CN", {hour12:false}),
+    mode: mode,
+    modeLabel: MODE_LABEL[mode] || mode,
+    style: val("renderStyle"),
+    ratio: document.getElementById("imageRatio").value,
+    prompt: promptText,
+    imageUrl: ""
+  };
+  const list = loadHistory();
+  list.unshift(rec);
+  saveHistory(list);
+  currentHistoryId = rec.id;
+  renderHistory();
+}
+
+function renderHistory(){
+  const list = loadHistory();
+  const box = document.getElementById("historyList");
+
+  if(!list.length){
+    box.innerHTML =
+      '<div class="history-empty">还没有历史记录。点「生成完整提示词」会自动保存，最多保留 50 条。</div>';
+    return;
+  }
+
+  box.innerHTML = list.map(r => `
+    <div class="history-item" onclick="loadHistoryItem('${r.id}')">
+      <div class="history-thumb">${r.imageUrl ? `<img src="${escapeHtml(r.imageUrl)}" alt="">` : "无图"}</div>
+      <div>
+        <div class="history-meta">
+          <span class="h-tag">${escapeHtml(r.modeLabel)}</span>
+          <span class="h-tag">${escapeHtml(r.style)}</span>
+          <span>${escapeHtml(r.time)}</span>
+        </div>
+        <div class="history-prompt">${escapeHtml(r.prompt)}</div>
+      </div>
+      <div class="history-actions">
+        <button class="alt" onclick="event.stopPropagation(); copyHistoryItem('${r.id}')">复制</button>
+        <button class="alt" onclick="event.stopPropagation(); deleteHistoryItem('${r.id}')">删除</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function loadHistoryItem(id){
+  const r = loadHistory().find(x => x.id === id);
+  if(!r) return;
+  document.getElementById("prompt").textContent = r.prompt;
+  currentHistoryId = id;
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+function copyHistoryItem(id){
+  const r = loadHistory().find(x => x.id === id);
+  if(!r) return;
+  navigator.clipboard.writeText(r.prompt)
+    .then(() => alert("已复制该条提示词"))
+    .catch(() => alert("复制失败，请手动选择"));
+}
+
+function deleteHistoryItem(id){
+  saveHistory(loadHistory().filter(x => x.id !== id));
+  renderHistory();
+}
+
+function clearHistory(){
+  if(!confirm("确定清空全部历史记录？此操作不可恢复。")) return;
+  localStorage.removeItem(HISTORY_KEY);
+  currentHistoryId = null;
+  renderHistory();
 }
 
 
@@ -1477,7 +1696,7 @@ function randomize(){
       a[Math.floor(Math.random() * a.length)];
   });
 
-  generate();
+  generate(true);
 }
 
 
@@ -1880,6 +2099,17 @@ async function generateImage(){
 
     img.src = imageSrc;
 
+    /* 把这张图挂到当前历史记录上 */
+    if(currentHistoryId){
+      const list = loadHistory();
+      const item = list.find(x => x.id === currentHistoryId);
+      if(item){
+        item.imageUrl = originalUrl || imageSrc;
+        saveHistory(list);
+        renderHistory();
+      }
+    }
+
     img.onload = function(){
 
       document.getElementById("aiResult").style.display =
@@ -1993,6 +2223,7 @@ function clearGeneratedImage(){
    ========================================================= */
 
 loadApiSettings();
+renderHistory();
 
 /*
  * 保持原版：页面加载后执行 generate()
